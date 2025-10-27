@@ -10,6 +10,13 @@ const Page = () => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery(trpc.getWorkflows.queryOptions());
+
+  const testAi = useMutation(trpc.testAi.mutationOptions({
+    onSuccess: () => {
+      toast.success("AI Job queued...");
+    }
+  }));
+
   const create = useMutation(trpc.createWorkflow.mutationOptions({
     onSuccess: () => {
       toast.success("Job queued...");
@@ -19,6 +26,7 @@ const Page = () => {
     <div className="min-h-screen min-w-screen flex items-center justify-center flex-col gap-y-6">
       Protected server component
       <div>
+        <Button disabled={testAi.isPending} onClick={() => testAi.mutate()}>Test AI</Button>
         {isLoading && <p>Loading...</p>}
         {error && <p className="text-red-500">Error: {error.message}</p>}
         {data && (
