@@ -6,6 +6,8 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { generateText } from "ai";
 
+import * as Sentry from "@sentry/nextjs";
+
 const google = createGoogleGenerativeAI();
 const openai = createOpenAI({
   baseURL: "https://openrouter.ai/api/v1",
@@ -19,12 +21,19 @@ export const executeAi = inngest.createFunction(
   { event: "execute/ai" },
   async ({ event, step }) => {
     await step.sleep("Pretending to do work...", "5s");
+    Sentry.logger.info('User triggered test log', { log_source: 'sentry_test' });
+    console.warn("This error that i want to track");
     const { steps: geminiSteps } = await step.ai.wrap("gemini-generate-text",
       generateText,
         {
           system: "You are a helpful assistant.",
           model: google("gemini-2.5-flash"),
           prompt: "What is 2 + 2?",
+          experimental_telemetry: {
+            isEnabled: true,
+            recordInputs: true,
+            recordOutputs: true,
+          },
         }
       );
     const { steps: openaiSteps } = await step.ai.wrap("openai-generate-text",
