@@ -47,8 +47,8 @@ export const premiumProcedure = protectedProcedure.use(async ({ ctx, next }) => 
     customer.activeSubscriptions.length === 0
   ) {
     throw new TRPCError({
-      code: 'FORBIDDEN',
-      message: 'You must have an active subscription to access this resource',
+      code: "FORBIDDEN",
+      message: 'Active subscription required',
     });
   }
   return next({ ctx: { ...ctx, customer } });
