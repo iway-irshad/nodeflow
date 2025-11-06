@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { PAGINATION } from "@/config/constants";
-import { retry } from "@polar-sh/sdk/lib/retries.js";
-import { de } from "date-fns/locale";
 
 interface UseEntitySearchProps<T extends { search: string, page: number }
 > {
