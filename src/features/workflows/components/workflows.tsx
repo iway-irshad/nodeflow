@@ -1,12 +1,15 @@
 "use client";
 
+import { formatDistance, formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
-import { useCreateWorkflow, useSuspenseWorkflows } from "../hooks/use-workflows";
-import { EntityContainer, EntityHeader, EntityPagination, EntitySearch } from "@/components/entity-components";
+import { useCreateWorkflow, useRemoveWorkflow, useSuspenseWorkflows } from "../hooks/use-workflows";
+import { EmptyView, EntityContainer, EntityHeader, EntityItem, EntityList, EntityPagination, EntitySearch, ErrorView, LoadingView } from "@/components/entity-components";
 import { useUpgradeModal } from "@/hooks/use-upgrade-modal";
 import { useRouter } from "next/navigation";
 import { useEntitySearch } from "../hooks/use-entity-search";
 import { useWorkflowsParams } from "../hooks/use-workflows-params";
+import type { Workflow } from "@/generated/prisma";
+import { WorkflowIcon } from "lucide-react";
 
 export const WorkflowsSearch = () => {
     const [params, setParams] = useWorkflowsParams();
@@ -25,39 +28,15 @@ export const WorkflowsSearch = () => {
 }
 
 export const WorkflowsList = () => {
-    const router = useRouter();
     const workflows = useSuspenseWorkflows();
-    
-    if (!workflows.data.items || workflows.data.items.length === 0) {
-        return (
-            <div className="flex-1 flex flex-col justify-center items-center gap-4 p-8">
-                <div className="text-center space-y-2">
-                    <h3 className="text-lg font-semibold text-gray-900">No workflows yet</h3>
-                    <p className="text-sm text-gray-500">Get started by creating your first workflow</p>
-                </div>
-            </div>
-        );
-    }
 
     return (
-        <div className="flex-1 p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {workflows.data.items.map((workflow) => (
-                    <div
-                        key={workflow.id}
-                        className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer bg-white"
-                        onClick={() => router.push(`/workflows/${workflow.id}`)}
-                    >
-                        <div className="flex flex-col gap-2">
-                            <h3 className="font-semibold text-lg truncate">{workflow.name}</h3>
-                            <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
-                                <span>Created {new Date(workflow.createdAt).toLocaleDateString()}</span>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
+        <EntityList
+            items={workflows.data.items}
+            getKey={(workflows) => workflows.id}
+            renderItem={(workflows) => <WorkflowsItem data={workflows}/>}
+            emptyView={<WorkflowsEmpty />}
+        />
     );
 };
 
@@ -114,5 +93,72 @@ export const WorkflowsContainer = ({children}: {children: React.ReactNode}) => {
         >
             {children}
         </EntityContainer>
+    );
+};
+
+export const WorkflowsLoading = () => {
+    return <LoadingView message="Loading Workflows...." />;
+};
+export const WorkflowsError = () => {
+    return <ErrorView message="Error while loading Workflows. Please, try again after sometime" />;
+};
+export const WorkflowsEmpty = () => {
+    const router = useRouter();
+    const createWorkflow = useCreateWorkflow();
+    const { handleError, modal } = useUpgradeModal();
+
+    const handleCreate = () => {
+        createWorkflow.mutate(undefined, {
+            onSuccess: (data) => {
+                router.push(`/workflows/${data.id}`);
+            },
+            onError: (error) => {
+                handleError(error);
+            },
+        });
+    };
+
+    return (
+        <>
+            {modal}
+            <EmptyView
+                onNew={handleCreate}
+                message="You haven't created any workflows yet. Get started by creating your first workflow"
+            
+            />
+        </>
+    )
+};
+
+export const WorkflowsItem = ({
+    data,
+}: { data: Workflow }) => {
+
+    const removeWorkflow = useRemoveWorkflow();
+    const handleRemove = () => {
+        removeWorkflow.mutate({ id: data.id });
+    }
+
+    return (
+        <EntityItem
+            href={`/workflows/${data.id}`}
+            title={data.name}
+            subtitle={
+                <>
+                    Updated {formatDistanceToNow(data.updatedAt, { addSuffix: true })} {" "}
+                    &bull; Created{" "}
+                    {formatDistanceToNow(data.createdAt, { addSuffix: true })}
+                </>
+            }
+            image={
+                <>
+                    <div className="size-8 flex items-center justify-center">
+                        <WorkflowIcon className="size-5 text-muted-foreground" />
+                    </div>
+                </>
+            }
+            onRemove={handleRemove}
+            isRemoving={removeWorkflow.isPending}
+        />
     );
 };
