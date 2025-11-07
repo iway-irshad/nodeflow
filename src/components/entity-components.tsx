@@ -263,7 +263,8 @@ export function EntityList<T>({
 
     return (
         <div className={cn(
-            "flex flex-col gap-y-4"
+            "flex flex-col gap-y-4",
+            className
         )}>
             {items.map((item, index) => (
                 <div key={getKey? getKey(item, index): index}>
