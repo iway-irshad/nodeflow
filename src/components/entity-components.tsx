@@ -246,6 +246,16 @@ interface EntityListProps<T> {
     className?: string;
 };
 
+/**
+ * Renders a vertical list of items using a provided renderer or displays a centered empty view when the list is empty.
+ *
+ * @param items - The array of items to render.
+ * @param renderItem - Function that receives an item and its index and returns a React node to render for that item.
+ * @param getKey - Optional function that returns a stable key for an item given the item and its index; index is used when absent.
+ * @param emptyView - Optional element to display centered when `items` is empty.
+ * @param className - Optional additional CSS class names to apply to the list container.
+ * @returns A JSX element containing the rendered list or the empty view.
+ */
 export function EntityList<T>({
     items,
     renderItem,
